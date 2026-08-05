@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Título do relatório — Período · Marca</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2334d399'/%3E%3Crect x='7' y='17' width='4' height='9' rx='2' fill='%23050507'/%3E%3Crect x='14' y='11' width='4' height='15' rx='2' fill='%23050507'/%3E%3Crect x='21' y='6' width='4' height='20' rx='2' fill='%23050507'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ============================================================
+     MODO RELATÓRIO — slide fixo 1920×1080, tema escuro.
+     Para números, apuração e board reporting.
+     Exporta PNG por slide (scripts/shots.py) e PDF 16:9.
+     ============================================================ */
+
+  :root{
+    --bg:#050507; --ink:#f5f3ff; --muted:#a7a7bd; --faint:#71718a;
+    --line:rgba(255,255,255,.09); --line2:rgba(255,255,255,.15);
+    --card:rgba(255,255,255,.035); --card2:rgba(255,255,255,.06);
+    /* cores semânticas — cada uma tem significado fixo, ver references/sistema-visual.md */
+    --pipeline:#fbbf24; --inbox:#34d399; --gestor:#60a5fa; --dist:#f472b6;
+    --ia:#a78bfa; --dados:#2dd4bf; --cyan:#22d3ee; --alerta:#f87171;
+    --sans:"Plus Jakarta Sans",system-ui,-apple-system,sans-serif;
+    --display:"Sora",system-ui,-apple-system,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{margin:0;padding:0;background:var(--bg)}
+  html{scroll-snap-type:y proximity;scroll-behavior:smooth}
+  body{font-family:var(--sans);color:var(--ink);-webkit-font-smoothing:antialiased;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact}
+  @page{size:1920px 1080px;margin:0}
+
+  .slide{width:1920px;height:1080px;position:relative;overflow:hidden;background:var(--bg);
+    padding:96px 130px;display:flex;flex-direction:column;scroll-snap-align:start}
+  .slide:not(:last-child){break-after:page;page-break-after:always}
+  .slide::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
+    background:
+      radial-gradient(760px 760px at 8% -6%, rgba(52,211,153,.16), transparent 60%),
+      radial-gradient(880px 880px at 104% 4%, rgba(96,165,250,.17), transparent 60%),
+      radial-gradient(680px 680px at 96% 108%, rgba(34,211,238,.10), transparent 62%);}
+  .slide>*{position:relative;z-index:1}
+
+  /* ---- cabeçalho e rodapé ---- */
+  .shead{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+  .brand{font-family:var(--display);font-weight:700;letter-spacing:.02em;font-size:1.15rem;color:var(--muted)}
+  .brand b{color:#fff}.brand i{font-style:normal;color:var(--inbox)}
+  .pageno{font-family:var(--display);font-weight:600;font-size:1rem;color:var(--faint);letter-spacing:.05em}
+  /* align-self impede a pílula de esticar (filho de flex-column estica por padrão) */
+  .eyebrow{display:inline-flex;align-self:flex-start;align-items:center;gap:11px;padding:9px 19px;border-radius:999px;
+    background:rgba(255,255,255,.05);border:1px solid var(--line);
+    font-size:.92rem;font-weight:600;letter-spacing:.17em;text-transform:uppercase;color:var(--muted)}
+  .eyebrow .dot{width:9px;height:9px;border-radius:50%;background:var(--inbox);box-shadow:0 0 14px var(--inbox)}
+  /* .sfoot é ABSOLUTO: conteúdo que passar de bottom:56px some no overflow do .slide */
+  .sfoot{position:absolute;left:130px;right:130px;bottom:56px;display:flex;justify-content:space-between;
+    align-items:center;color:var(--faint);font-size:.95rem;z-index:1}
+  .sfoot .u{font-family:var(--display);font-weight:600;color:var(--muted)}
+
+  /* ---- capa ---- */
+  .cover{justify-content:center}
+  .cover h1{font-family:var(--display);font-weight:800;line-height:1.0;letter-spacing:-.03em;font-size:6.6rem;margin:34px 0 0}
+  .cover h1 .grad{background:linear-gradient(100deg,#34d399,#22d3ee 34%,#60a5fa 66%,#a78bfa);
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .cover h1 .dim{background:linear-gradient(180deg,#eceaff,#9a9ab4);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .cover .lede{max-width:1180px;margin:40px 0 0;color:var(--muted);font-size:1.7rem;line-height:1.5}
+  .cover .lede b{color:var(--ink);font-weight:600}
+  .mini{display:flex;gap:64px;margin-top:64px}
+  .mini .n{font-family:var(--display);font-weight:800;font-size:2.9rem;line-height:1;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+  .mini .l{font-size:1.05rem;color:var(--faint);margin-top:10px}
+
+  /* ---- títulos de slide ---- */
+  .title{font-family:var(--display);font-weight:700;font-size:3.5rem;letter-spacing:-.02em;margin:30px 0 6px}
+  .subtitle{color:var(--muted);font-size:1.45rem;margin-bottom:6px}
+  .subtitle b{color:var(--ink);font-weight:600}
+
+  /* ---- números ---- */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:30px;margin-top:auto;margin-bottom:auto}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:28px;padding:52px 44px;position:relative;overflow:hidden}
+  .stat::before{content:"";position:absolute;inset:0 auto auto 0;width:100%;height:4px;background:var(--ac,#fff);opacity:.9}
+  .stat .big{font-family:var(--display);font-weight:800;font-size:4.9rem;line-height:.95;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+  .stat .lb{margin-top:22px;font-weight:600;font-size:1.5rem}
+  .stat .sb{margin-top:8px;font-size:1.1rem;color:var(--faint);line-height:1.4}
+
+  .feat{display:grid;grid-template-columns:repeat(3,1fr);gap:34px;margin-top:auto;margin-bottom:auto}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:30px;padding:48px 42px;position:relative;overflow:hidden;display:flex;flex-direction:column}
+  .card::before{content:"";position:absolute;inset:0 auto auto 0;width:100%;height:4px;background:var(--ac,#34d399);opacity:.95}
+  .card .ic{font-size:3.1rem;line-height:1}
+  .card h3{font-family:var(--display);font-weight:600;font-size:1.86rem;margin:26px 0 16px;letter-spacing:-.01em;line-height:1.18}
+  .card p{color:var(--muted);font-size:1.24rem;line-height:1.5}
+  .card .tag{margin-top:auto;padding-top:24px;font-family:var(--display);font-size:1rem;font-weight:600;letter-spacing:.03em;
+    display:inline-flex;align-items:center;gap:10px;color:var(--ac,#fff)}
+  .card .tag .sw{width:11px;height:11px;border-radius:50%;background:var(--ac,#fff)}
+
+  /* ---- funil horizontal: largura da barra = proporção real do valor ---- */
+  .funil{display:flex;flex-direction:column;gap:22px;margin-top:auto;margin-bottom:auto}
+  .fstep{display:grid;grid-template-columns:300px 1fr 300px;align-items:center;gap:28px}
+  .fstep .fl{font-family:var(--display);font-weight:600;font-size:1.6rem}
+  .fstep .fl small{display:block;font-family:var(--sans);font-weight:400;font-size:1.05rem;color:var(--faint);margin-top:5px}
+  .fstep .track{height:56px;background:rgba(255,255,255,.04);border-radius:12px;overflow:hidden}
+  .fstep .fill{height:100%;border-radius:12px;display:flex;align-items:center;padding:0 22px;
+    font-family:var(--display);font-weight:800;font-size:1.5rem;color:#050507;font-variant-numeric:tabular-nums}
+  .fstep .fv{text-align:right;font-family:var(--display);font-weight:700;font-size:1.5rem;font-variant-numeric:tabular-nums}
+  .fstep .fv small{display:block;font-family:var(--sans);font-weight:400;font-size:1rem;color:var(--faint);margin-top:5px}
+
+  /* ---- lista de duas colunas com número à direita ---- */
+  .lista{display:grid;grid-template-columns:1fr 1fr;gap:20px 54px;margin-top:auto;margin-bottom:auto}
+  .li{display:flex;align-items:center;gap:20px;padding:20px 26px;background:var(--card);
+    border:1px solid var(--line);border-radius:18px}
+  .li .bar{width:5px;align-self:stretch;border-radius:5px;background:var(--ac,#fff)}
+  .li .nome{flex:1;font-size:1.3rem}
+  .li .nome small{display:block;color:var(--faint);font-size:1rem;margin-top:4px}
+  .li .val{font-family:var(--display);font-weight:800;font-size:1.7rem;font-variant-numeric:tabular-nums}
+  .li .pct{font-size:1.05rem;color:var(--faint);margin-left:12px}
+
+  .chip{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:999px;
+    font-family:var(--display);font-size:1rem;font-weight:700;letter-spacing:.02em}
+  .chip.up{background:rgba(52,211,153,.14);color:#6ee7b7;border:1px solid rgba(52,211,153,.35)}
+  .chip.down{background:rgba(248,113,113,.14);color:#fca5a5;border:1px solid rgba(248,113,113,.35)}
+  .chips{display:flex;gap:14px;margin-top:18px;flex-wrap:wrap}
+
+  .closing{margin-top:60px;font-family:var(--display);font-weight:600;font-size:1.9rem;color:var(--muted);line-height:1.4;max-width:1400px}
+  .closing b{color:var(--ink)}
+
+  /* ---- honestidade: nota = contexto, metod = ressalva/metodologia ---- */
+  .nota{margin-top:26px;font-size:1.05rem;color:var(--faint);line-height:1.6;max-width:1400px}
+  .nota b{color:var(--ink);font-weight:600}
+  .metod{margin-top:26px;padding:22px 28px;border-radius:18px;background:rgba(96,165,250,.07);
+    border:1px solid rgba(96,165,250,.28);font-size:1.06rem;color:var(--muted);line-height:1.6;max-width:1560px}
+  .metod b{color:var(--ink);font-weight:600}
+  .metod .h{font-family:var(--display);font-weight:700;color:#93c5fd;font-size:1rem;
+    letter-spacing:.12em;text-transform:uppercase;display:block;margin-bottom:9px}
+
+  /* ---- variantes de densidade ---- */
+  .lista.um{grid-template-columns:1fr}
+  .stats.tres{grid-template-columns:repeat(3,1fr)}
+  .stats.dois{grid-template-columns:repeat(2,1fr)}
+  /* 7 linhas no funil não cabem na altura padrão: encurta linha e respiro */
+  .funil.compacto{gap:13px}
+  .funil.compacto .fstep .track{height:46px}
+  .funil.compacto .fstep .fl{font-size:1.45rem}
+  .funil.compacto .fstep .fl small{font-size:.98rem;margin-top:3px}
+  .funil.compacto .fstep .fv{font-size:1.38rem}
+  .funil.compacto .fstep .fv small{font-size:.94rem;margin-top:3px}
+  .funil.compacto .fstep .fill{font-size:1.35rem}
+  /* barra estreita: o rótulo não cabe dentro, então vai logo à direita dela */
+  .fstep .fill{position:relative}
+  .fstep .fill.sm{padding:0}
+  .fstep .fill.sm span{position:absolute;left:100%;margin-left:16px;top:50%;transform:translateY(-50%);
+    color:var(--ink);white-space:nowrap}
+
+  /* ---- antes/agora (importado do modo narrativa, adaptado ao escuro) ---- */
+  .shift{display:grid;grid-template-columns:1fr auto 1fr;align-items:stretch;margin-top:32px;
+    border:1px solid var(--line2);border-radius:20px;overflow:hidden;max-width:1560px}
+  .shift__side{padding:24px 30px;display:flex;flex-direction:column;gap:8px}
+  .shift__side--before{background:rgba(255,255,255,.03)}
+  .shift__side--after{background:linear-gradient(135deg,rgba(52,211,153,.12),transparent 85%)}
+  .shift__tag{font-family:var(--display);font-size:.85rem;font-weight:800;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--faint)}
+  .shift__side--after .shift__tag{color:var(--inbox)}
+  .shift__side p{font-size:1.15rem;line-height:1.45;color:var(--muted)}
+  .shift__side--after p{color:var(--ink);font-weight:600}
+  .shift__arrow{display:flex;align-items:center;padding:0 18px;background:rgba(255,255,255,.03);
+    color:var(--faint);border-left:1px solid var(--line);border-right:1px solid var(--line)}
+  .shift__arrow svg{width:22px;height:22px}
+
+  /* ---- moldura de navegador para print de tela (importado do modo narrativa) ---- */
+  .shot{position:relative;margin-top:auto;margin-bottom:auto}
+  .frame{position:relative;z-index:1;border-radius:16px;overflow:hidden;background:#0b0b12;
+    border:1px solid var(--line2);box-shadow:0 30px 70px rgba(0,0,0,.55)}
+  .frame__bar{display:flex;align-items:center;gap:10px;height:40px;padding:0 15px;
+    background:rgba(255,255,255,.05);border-bottom:1px solid var(--line)}
+  .frame__dots{display:inline-flex;gap:7px;flex:0 0 auto}
+  .frame__dots i{width:10px;height:10px;border-radius:50%;display:block}
+  .frame__dots i:nth-child(1){background:#f0a9a0}
+  .frame__dots i:nth-child(2){background:#f3d08a}
+  .frame__dots i:nth-child(3){background:#a7d8b4}
+  .frame__url{flex:1 1 auto;max-width:340px;margin:0 auto;background:rgba(0,0,0,.35);
+    border:1px solid var(--line);border-radius:999px;padding:4px 14px;font-size:.8rem;font-weight:600;
+    color:var(--faint);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .frame__spacer{flex:0 0 46px}
+  .frame img{width:100%;display:block}
+  .frame__note{margin-top:10px;font-size:.85rem;letter-spacing:.06em;color:var(--faint);
+    text-align:right;text-transform:uppercase;font-weight:600}
+
+  /* ---- HUD de navegação (só na tela, some no PDF/print) ---- */
+  .hud-counter{position:fixed;bottom:28px;left:30px;z-index:60;font-family:var(--display);
+    font-size:.85rem;font-weight:700;letter-spacing:.06em;color:var(--faint)}
+  .hud-counter strong{color:var(--muted)}
+  .hud-controls{position:fixed;bottom:24px;right:28px;z-index:60;display:flex;flex-direction:column;gap:8px}
+  .hud-btn{width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.06);
+    border:1px solid var(--line2);display:inline-flex;align-items:center;justify-content:center;
+    cursor:pointer;color:var(--muted);transition:color 180ms,border-color 180ms,transform 180ms}
+  .hud-btn:hover{color:var(--ink);border-color:rgba(255,255,255,.4);transform:translateY(-1px)}
+  .hud-btn svg{width:17px;height:17px}
+  :focus{outline:none}
+  :focus-visible{outline:2px solid var(--inbox);outline-offset:3px;border-radius:6px}
+
+  /* IMPRESSÃO: texto com background-clip:text não sobrevive ao PDF — o leitor pinta
+     a CAIXA inteira e o título vira um retângulo colorido. No papel, cor sólida. */
+  @media print{
+    html{scroll-snap-type:none}
+    .hud-counter,.hud-controls{display:none !important}
+    .cover h1 .dim{background:none !important;-webkit-background-clip:border-box !important;
+      background-clip:border-box !important;color:#dcdaee !important;-webkit-text-fill-color:#dcdaee !important}
+    .cover h1 .grad{background:none !important;-webkit-background-clip:border-box !important;
+      background-clip:border-box !important;color:#34d399 !important;-webkit-text-fill-color:#34d399 !important}
+  }
+</style>
+</head>
+<body>
+
+<!-- sprite de ícones: use com <svg><use href="#i-nome"/></svg> -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+<symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><polyline points="7 14.5 11 10 14.5 13 20 6.5"/></symbol>
+<symbol id="i-target" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="8.2 12.3 11 15 16 9.5"/></symbol>
+<symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18.2A2 2 0 0 0 3.5 21.2h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4.5M12 17.2h.01"/></symbol>
+<symbol id="i-arrow-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15"/><polyline points="13 6 19 12 13 18"/></symbol>
+<symbol id="i-chev-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></symbol>
+<symbol id="i-chev-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></symbol>
+</svg>
+
+<div class="hud-counter"><strong id="hud-current">01</strong> / <span id="hud-total">00</span></div>
+<div class="hud-controls">
+  <button class="hud-btn" id="nav-prev" type="button" aria-label="Slide anterior"><svg><use href="#i-chev-up"/></svg></button>
+  <button class="hud-btn" id="nav-next" type="button" aria-label="Próximo slide"><svg><use href="#i-chev-down"/></svg></button>
+</div>
+
+<!-- ============================================================
+     A PARTIR DAQUI É EXEMPLO. Cada slide demonstra um componente.
+     Apague o que não usar. Os números são fictícios — troque por
+     apuração real e preencha o .sfoot com a fonte de cada um.
+     ============================================================ -->
+
+<!-- 01 · CAPA -->
+<section class="slide cover">
+  <div class="shead"><div class="brand"><b>MARCA</b>·<i>ÁREA</i></div><div class="pageno">01</div></div>
+  <span class="eyebrow"><span class="dot"></span>Relatório mensal · Período</span>
+  <h1><span class="dim">A frase que resume</span><br><span class="grad">o mês em uma linha.</span></h1>
+  <p class="lede">Uma abertura de duas ou três linhas dizendo o que a diretoria vai encontrar aqui e
+    <b>qual decisão este material sustenta</b>. Sem adjetivo sem lastro.</p>
+  <div class="mini">
+    <div><div class="n" style="color:var(--inbox)">R$ 0,00 mi</div><div class="l">Receita apurada no PMS</div></div>
+    <div><div class="n" style="color:var(--gestor)">0,0×</div><div class="l">ROAS de mídia paga</div></div>
+    <div><div class="n" style="color:var(--pipeline)">0.000</div><div class="l">Leads captados</div></div>
+  </div>
+  <div class="sfoot"><span class="u">Fonte: sistema · tabela</span><span>Apurado em 00/00/0000</span></div>
+</section>
+
+<!-- 02 · NÚMEROS DO PERÍODO — componente .stats -->
+<section class="slide">
+  <div class="shead"><div class="brand"><b>MARCA</b>·<i>ÁREA</i></div><div class="pageno">02</div></div>
+  <div class="title">Os números do período</div>
+  <div class="subtitle">Uma linha de leitura, com o que importa em <b>negrito</b>.</div>
+  <div class="stats">
+    <div class="stat" style="--ac:var(--inbox)"><div class="big" style="color:var(--inbox)">R$ 0,00 mi</div><div class="lb">Rótulo do indicador</div><div class="sb">Recorte e comparação</div></div>
+    <div class="stat" style="--ac:var(--gestor)"><div class="big" style="color:var(--gestor)">0.000</div><div class="lb">Rótulo do indicador</div><div class="sb">Recorte e comparação</div></div>
+    <div class="stat" style="--ac:var(--pipeline)"><div class="big" style="color:var(--pipeline)">0,0%</div><div class="lb">Rótulo do indicador</div><div class="sb">Recorte e comparação</div></div>
+    <div class="stat" style="--ac:var(--alerta)"><div class="big" style="color:var(--alerta)">R$ 0 mil</div><div class="lb">Rótulo do indicador</div><div class="sb">Recorte e comparação</div></div>
+  </div>
+  <div class="nota"><b>Contexto:</b> a frase que evita a leitura errada do número acima.</div>
+  <div class="sfoot"><span class="u">Fonte: sistema · tabela</span><span>Período</span></div>
+</section>
+
+<!-- 03 · FUNIL — largura da barra = proporção real -->
+<section class="slide">
+  <div class="shead"><div class="brand"><b>MARCA</b>·<i>ÁREA</i></div><div class="pageno">03</div></div>
+  <div class="title">Do primeiro toque à venda</div>
+  <div class="subtitle">Cada barra é proporcional ao valor. <b>Nada aqui é decorativo.</b></div>
+  <div class="funil">
+    <div class="fstep">
+      <div class="fl">Etapa larga<small>o recorte da etapa</small></div>
+      <div class="track"><div class="fill" style="width:100%;background:var(--inbox)">0.000</div></div>
+      <div class="fv">100%<small>base</small></div>
+    </div>
+    <div class="fstep">
+      <div class="fl">Etapa média<small>o recorte da etapa</small></div>
+      <div class="track"><div class="fill" style="width:42%;background:var(--gestor)">000</div></div>
+      <div class="fv">42%<small>da base</small></div>
+    </div>
+    <div class="fstep">
+      <div class="fl">Etapa estreita<small>rótulo vai fora da barra</small></div>
+      <div class="track"><div class="fill sm" style="width:7%;background:var(--pipeline)"><span>00</span></div></div>
+      <div class="fv">7%<small>da base</small></div>
+    </div>
+  </div>
+  <div class="metod"><span class="h">⚠ O que este slide não afirma</span>
+    A ressalva que impede a leitura otimista. Se a base é imatura, é <b>aqui</b> que se diz,
+    e se diz por que não dá para projetar.</div>
+  <div class="sfoot"><span class="u">Fonte: sistema · tabela</span><span>Período</span></div>
+</section>
+
+<!-- 04 · RANQUEAMENTO — componente .lista -->
+<section class="slide">
+  <div class="shead"><div class="brand"><b>MARCA</b>·<i>ÁREA</i></div><div class="pageno">04</div></div>
+  <div class="title">Por que a gente perde</div>
+  <div class="subtitle">O % é <b>share do valor perdido</b>, não contagem de casos.</div>
+  <div class="lista">
+    <div class="li" style="--ac:var(--alerta)"><div class="bar"></div><div class="nome">Motivo mais caro<small>000 oportunidades</small></div><div class="val">R$ 0,00 mi<span class="pct">00,0%</span></div></div>
+    <div class="li" style="--ac:var(--pipeline)"><div class="bar"></div><div class="nome">Segundo motivo<small>000 oportunidades</small></div><div class="val">R$ 000 mil<span class="pct">00,0%</span></div></div>
+    <div class="li" style="--ac:var(--gestor)"><div class="bar"></div><div class="nome">Terceiro motivo<small>000 oportunidades</small></div><div class="val">R$ 000 mil<span class="pct">0,0%</span></div></div>
+    <div class="li" style="--ac:var(--ia)"><div class="bar"></div><div class="nome">Quarto motivo<small>000 oportunidades</small></div><div class="val">R$ 000 mil<span class="pct">0,0%</span></div></div>
+  </div>
+  <div class="nota">A conclusão que muda a conversa, em uma frase. <b>O que fazer com isso.</b></div>
+  <div class="sfoot"><span class="u">Fonte: sistema · tabela</span><span>Período</span></div>
+</section>
+
+<!-- 05 · ANTES/AGORA + PROVA DE TELA -->
+<section class="slide">
+  <div class="shead"><div class="brand"><b>MARCA</b>·<i>ÁREA</i></div><div class="pageno">05</div></div>
+  <div class="title">O que mudou na prática</div>
+  <div class="shift">
+    <div class="shift__side shift__side--before"><span class="shift__tag">Antes</span><p>Como era, sem adjetivo.</p></div>
+    <div class="shift__arrow"><svg><use href="#i-arrow-right"/></svg></div>
+    <div class="shift__side shift__side--after"><span class="shift__tag">Agora</span><p>Como é, com o efeito medido.</p></div>
+  </div>
+  <div class="shot">
+    <div class="frame">
+      <div class="frame__bar"><span class="frame__dots"><i></i><i></i><i></i></span><span class="frame__url">sistema.exemplo.com</span><span class="frame__spacer"></span></div>
+      <img src="" alt="Print da tela que comprova a mudança">
+    </div>
+    <p class="frame__note">Interface real · dados do período</p>
+  </div>
+  <div class="sfoot"><span class="u">Fonte: sistema · tabela</span><span>Período</span></div>
+</section>
+
+<!-- 06 · FECHAMENTO -->
+<section class="slide">
+  <div class="shead"><div class="brand"><b>MARCA</b>·<i>ÁREA</i></div><div class="pageno">06</div></div>
+  <span class="eyebrow"><span class="dot"></span>O que fica</span>
+  <div class="title">As três decisões que este material sustenta</div>
+  <div class="feat">
+    <div class="card" style="--ac:var(--inbox)"><div class="ic">✅</div><h3>Decisão a tomar</h3><p>O que muda, quem faz e até quando.</p><div class="tag"><span class="sw"></span>Dono · prazo</div></div>
+    <div class="card" style="--ac:var(--gestor)"><div class="ic">📊</div><h3>Decisão a tomar</h3><p>O que muda, quem faz e até quando.</p><div class="tag"><span class="sw"></span>Dono · prazo</div></div>
+    <div class="card" style="--ac:var(--pipeline)"><div class="ic">⏳</div><h3>Decisão a tomar</h3><p>O que muda, quem faz e até quando.</p><div class="tag"><span class="sw"></span>Dono · prazo</div></div>
+  </div>
+  <div class="closing">A frase de fechamento, curta. <b>O que a diretoria leva daqui.</b></div>
+  <div class="sfoot"><span class="u">Fonte: sistema · tabela</span><span>Apurado em 00/00/0000</span></div>
+</section>
+
+<script>
+(() => {
+  'use strict';
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const totalEl = document.getElementById('hud-total');
+  const currentEl = document.getElementById('hud-current');
+  if (totalEl) totalEl.textContent = String(slides.length).padStart(2, '0');
+
+  // Encaixa o slide de 1920px na janela quando ela é menor. Em 1920 exatos (o do
+  // screenshot e o do PDF) o fator é 1 e nada muda.
+  function ajustar() {
+    const f = Math.min(1, window.innerWidth / 1920);
+    document.body.style.zoom = f === 1 ? '' : String(f);
+  }
+  ajustar();
+  window.addEventListener('resize', ajustar);
+
+  function atual() {
+    let idx = 0, min = Infinity;
+    slides.forEach((s, i) => {
+      const d = Math.abs(s.getBoundingClientRect().top);
+      if (d < min) { min = d; idx = i; }
+    });
+    return idx;
+  }
+  function irPara(i) {
+    i = Math.max(0, Math.min(slides.length - 1, i));
+    slides[i].scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  const proximo = () => irPara(atual() + 1);
+  const anterior = () => irPara(atual() - 1);
+
+  window.addEventListener('keydown', e => {
+    const tag = (e.target && e.target.tagName) || '';
+    if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+    if (['ArrowDown','ArrowRight','PageDown',' '].includes(e.key)) { e.preventDefault(); proximo(); }
+    else if (['ArrowUp','ArrowLeft','PageUp'].includes(e.key)) { e.preventDefault(); anterior(); }
+    else if (e.key === 'Home') { e.preventDefault(); irPara(0); }
+    else if (e.key === 'End') { e.preventDefault(); irPara(slides.length - 1); }
+  });
+
+  document.getElementById('nav-next')?.addEventListener('click', proximo);
+  document.getElementById('nav-prev')?.addEventListener('click', anterior);
+
+  if ('IntersectionObserver' in window) {
+    const spy = new IntersectionObserver(entries => {
+      let melhor = null;
+      entries.forEach(e => { if (e.isIntersecting && (!melhor || e.intersectionRatio > melhor.intersectionRatio)) melhor = e; });
+      if (melhor && currentEl) {
+        const i = slides.indexOf(melhor.target);
+        if (i > -1) currentEl.textContent = String(i + 1).padStart(2, '0');
+      }
+    }, { threshold: [0.25, 0.5, 0.75] });
+    slides.forEach(s => spy.observe(s));
+  }
+})();
+</script>
+
+</body>
+</html>

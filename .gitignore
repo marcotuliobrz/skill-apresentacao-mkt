@@ -1,0 +1,8 @@
+.DS_Store
+__pycache__/
+*.pyc
+/saida/
+/out/
+
+# relatório real usado como referência local — NÃO versionar
+/refs/
